@@ -3,8 +3,6 @@ name: CI
 'on':
   pull_request:
   push:
-    branches:
-      - master
   schedule:
     - cron: "0 7 * * 0"
 
@@ -34,7 +32,38 @@ jobs:
       - name: Lint code.
         run: |
           yamllint .
+          
+  scan-dependencies:
+    name: Scan dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Perform integration testing with ansible-test
+        uses: ansible-community/ansible-test-gh-action@release/v1
+        with:
+          ansible-core-version: stable-2.11
+          pre-test-cmd: echo This runs before the ansible-test invocation
+          python-version: 3.9
+          target-python-version: 3.9
+          testing-type: integration
+          test-deps: ansible.netcommon
+      - name: Perform sanity testing with ansible-test
+        uses: ansible-community/ansible-test-gh-action@release/v1
+        with:
+          ansible-core-version: stable-2.11
+          testing-type: sanity
+      - name: Perform unit testing with ansible-test
+        uses: ansible-community/ansible-test-gh-action@release/v1
+        with:
+          ansible-core-version: stable-2.11
+          pre-test-cmd: echo This runs before the ansible-test invocation
+          python-version: 3.9
+          target-python-version: 3.9
+          testing-type: units
+          test-deps: >-
+            ansible.netcommon
+            ansible.utils
 
+    
   molecule:
     name: Molecule
     runs-on: ubuntu-latest
